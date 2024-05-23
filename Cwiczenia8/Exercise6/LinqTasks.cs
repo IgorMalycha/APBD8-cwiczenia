@@ -258,8 +258,8 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<object> Task10()
         {
-            IEnumerable<object> result = Emps.Select(e => new { e.Ename, e.Job, e.HireDate });
-               //? 
+            IEnumerable<object> result  = Emps.Select(e => new { e.Ename, e.Job, e.HireDate })
+                .Union(new[] { new { Ename = "Brak wartości", Job = string.Empty, HireDate = (DateTime?)null}});
             return result;
         }
 
@@ -276,12 +276,10 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<object> Task11()
         {
-            IEnumerable<object> result = Emps.GroupBy(e => e.Deptno).Where(g => g.Count() > 1)
-                .Select(e => new
-                {
-                    name = Depts.FirstOrDefault(d => d.Deptno == e.Key), 
-                    numOfEmployees  = e.Count()
-                }).ToList();
+            IEnumerable<object> result = Depts.GroupJoin(Emps,
+                    d => d.Deptno,
+                    e => e.Deptno,
+                    (d, e) => new { name = d.Dname, numOfEmployees = e.Count()}).Where(a => a.numOfEmployees > 1);
             return result;
         }
 
@@ -294,7 +292,9 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<Emp> Task12()
         {
-            IEnumerable<Emp> result = null;
+            IEnumerable<Emp> result = Emps.Where(e => e.ExtensionMethod())
+                .OrderBy(e => e.Ename)
+                .ThenByDescending(e => e.Salary);
             return result;
         }
 
@@ -309,7 +309,6 @@ namespace Exercise6
         {
             int result = arr.GroupBy(n => n).Where(n => (n.Count() % 2) == 1).
                 Select(n => n.Key).Single();
-            //result=
             return result;
         }
 
@@ -330,13 +329,15 @@ namespace Exercise6
                 .OrderBy(de => de.Department.Dname)
                 .Select(de => de.Department)
                 .ToList();
-            //result =
             return result;
         }
     }
 
     public static class CustomExtensionMethods
     {
-        //Put your extension methods here
+        public static bool ExtensionMethod(this Emp emp)
+        {
+            return LinqTasks.Emps.Any(e => e.Mgr == emp);
+        }
     }
 }
